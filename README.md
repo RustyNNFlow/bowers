@@ -11,4 +11,6 @@ a group of Basic Operations WidEly used by RuSty nn
   - data structures
     - [ndarray](https://github.com/rust-ndarray/ndarray)
     - [tensor](https://github.com/LaurentMazare/tch-rs/tree/main/torch-sys)
-  - ......
+  - device backend
+    - cpu
+    - gpu (not currently considered)
