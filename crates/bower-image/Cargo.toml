@@ -1,12 +1,12 @@
 [package]
-name = "bower-core"
+name = "bower-image"
 version = "0.1.0"
-authors = ["leonzhao"]
 edition = "2021"
-readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
 [features]
 
 [dependencies]
-anyhow = "1.0"
+bower-core = { path = "../bower-core" }
+image = { version = "0.24.3", optional = true }

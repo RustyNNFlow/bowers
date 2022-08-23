@@ -8,3 +8,9 @@ repository = "https://github.com/RustyNNFlow/bowers"
 
 [workspace]
 members = ["crates/*"]
+
+[dependencies]
+bower-internal = { path = "crates/bower-internal" }
+
+[features]
+image-rs = ["bower-internal/image-rs"]
