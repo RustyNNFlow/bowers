@@ -28,10 +28,10 @@ pub trait IntBoxLike {
     fn iy1(&self) -> isize;
     fn ix2(&self) -> isize;
     fn iy2(&self) -> isize;
-    fn width(&self) -> usize {
+    fn iwidth(&self) -> usize {
         (self.ix2() - self.ix1()) as usize
     }
-    fn height(&self) -> usize {
+    fn iheight(&self) -> usize {
         (self.iy2() - self.iy1()) as usize
     }
 }
@@ -103,28 +103,41 @@ impl BoxLike for Bbox {
     }
 }
 
-macro_rules! impl_box_like_arrays {
-    ($($ty: ty),*) => {
-        $(
-            impl BoxLike for [$ty;4] {
-                fn x1(&self) -> f64 {
-                    self[0] as f64
-                }
-                fn y1(&self) -> f64 {
-                    self[1] as f64
-                }
-                fn x2(&self) -> f64 {
-                    self[2] as f64
-                }
-                fn y2(&self) -> f64 {
-                    self[3] as f64
-                }
-            }
-        )*
+impl<T: Into<f64> + Copy> BoxLike for [T; 4] {
+    fn x1(&self) -> f64 {
+        self[0].into()
+    }
+
+    fn y1(&self) -> f64 {
+        self[1].into()
+    }
+
+    fn x2(&self) -> f64 {
+        self[2].into()
+    }
+
+    fn y2(&self) -> f64 {
+        self[3].into()
     }
 }
 
-impl_box_like_arrays!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64);
+impl<T: Into<f64> + Copy> BoxLike for (T, T, T, T) {
+    fn x1(&self) -> f64 {
+        self.0.into()
+    }
+
+    fn y1(&self) -> f64 {
+        self.1.into()
+    }
+
+    fn x2(&self) -> f64 {
+        self.2.into()
+    }
+
+    fn y2(&self) -> f64 {
+        self.3.into()
+    }
+}
 
 #[cfg(test)]
 mod test {

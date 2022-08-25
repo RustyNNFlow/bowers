@@ -33,19 +33,22 @@ impl PointLike for Point {
     }
 }
 
-macro_rules! impl_point_like_arrays {
-    ($($ty: ty),*) => {
-        $(
-            impl PointLike for [$ty;2] {
-                fn x(&self) -> f64 {
-                    self[0] as f64
-                }
-                fn y(&self) -> f64 {
-                    self[1] as f64
-                }
-            }
-        )*
+impl<T: Into<f64> + Copy> PointLike for [T; 2] {
+    fn x(&self) -> f64 {
+        self[0].into()
+    }
+
+    fn y(&self) -> f64 {
+        self[1].into()
     }
 }
 
-impl_point_like_arrays!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64);
+impl<T: Into<f64> + Copy> PointLike for (T, T) {
+    fn x(&self) -> f64 {
+        self.0.into()
+    }
+
+    fn y(&self) -> f64 {
+        self.1.into()
+    }
+}

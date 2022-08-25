@@ -9,9 +9,19 @@ pub trait BinaryMaskLike {
 }
 
 pub struct BinaryMask {
+    pub data: Vec<bool>,
     pub width: usize,
     pub height: usize,
-    pub data: Vec<bool>,
+}
+
+impl BinaryMask {
+    pub fn new(data: Vec<bool>, width: usize, height: usize) -> Self {
+        BinaryMask {
+            width,
+            height,
+            data,
+        }
+    }
 }
 
 impl BinaryMaskLike for BinaryMask {
@@ -42,15 +52,15 @@ impl BinaryMaskLike for BinaryMask {
     }
 
     fn get_sub_mask(&self, roi: &impl IntBoxLike) -> Self {
-        let mut data = Vec::with_capacity(roi.width() * roi.height());
+        let mut data = Vec::with_capacity(roi.iwidth() * roi.iheight());
         for y in roi.iy1()..roi.iy2() {
             for x in roi.ix1()..roi.ix2() {
                 data.push(self.data[y as usize * self.width + x as usize]);
             }
         }
         BinaryMask {
-            width: roi.width(),
-            height: roi.height(),
+            width: roi.iwidth(),
+            height: roi.iheight(),
             data,
         }
     }

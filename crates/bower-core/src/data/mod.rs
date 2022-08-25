@@ -1,5 +1,5 @@
-mod bbox;
-mod mask;
-mod point;
-mod polygon;
+pub mod bbox;
+pub mod mask;
+pub mod point;
+pub mod polygon;
 pub use bbox::Bbox;
