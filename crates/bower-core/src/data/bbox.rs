@@ -1,145 +1,150 @@
-use std::ops::{Add, Sub};
-
 pub trait BoxLike {
-    type Item: Sub<Output = Self::Item>;
-    fn x1(&self) -> Self::Item;
-    fn y1(&self) -> Self::Item;
-    fn x2(&self) -> Self::Item;
-    fn y2(&self) -> Self::Item;
-    fn width(&self) -> Self::Item {
+    fn x1(&self) -> f64;
+    fn y1(&self) -> f64;
+    fn x2(&self) -> f64;
+    fn y2(&self) -> f64;
+    fn iou(&self, other: &Self) -> f64 {
+        let x1 = self.x1().max(other.x1());
+        let y1 = self.y1().max(other.y1());
+        let x2 = self.x2().min(other.x2());
+        let y2 = self.y2().min(other.y2());
+        let w = (x2 - x1).max(0_f64);
+        let h = (y2 - y1).max(0_f64);
+        let inter = w * h;
+        let area1 = (self.x2() - self.x1()) * (self.y2() - self.y1());
+        let area2 = (other.x2() - other.x1()) * (other.y2() - other.y1());
+        inter as f64 / (area1 + area2 - inter) as f64
+    }
+    fn width(&self) -> f64 {
         self.x2() - self.x1()
     }
-    fn height(&self) -> Self::Item {
+    fn height(&self) -> f64 {
         self.y2() - self.y1()
     }
 }
 
-pub struct Bbox<T: Add<Output = T> + Sub<Output = T> + Copy = f64> {
-    pub x1: T,
-    pub y1: T,
-    pub x2: T,
-    pub y2: T,
-}
-
-impl<T: Add<Output = T> + Sub<Output = T> + Copy> Bbox<T> {
-    pub fn new(x1: T, y1: T, x2: T, y2: T) -> Self {
-        Bbox { x1, y1, x2, y2 }
+pub trait IntBoxLike {
+    fn ix1(&self) -> isize;
+    fn iy1(&self) -> isize;
+    fn ix2(&self) -> isize;
+    fn iy2(&self) -> isize;
+    fn width(&self) -> usize {
+        (self.ix2() - self.ix1()) as usize
     }
-
-    pub fn from_arr(arr: &[T; 4]) -> Self {
-        Bbox {
-            x1: arr[0],
-            y1: arr[1],
-            x2: arr[2],
-            y2: arr[3],
-        }
-    }
-
-    // pub fn from_slice(slice: &[T]) -> Self {
-    //     Bbox {
-    //         x1: slice[0],
-    //         y1: slice[1],
-    //         x2: slice[2],
-    //         y2: slice[3],
-    //     }
-    // }
-
-    pub fn from_wh(x: T, y: T, w: T, h: T) -> Self {
-        Bbox {
-            x1: x,
-            y1: y,
-            x2: x + w,
-            y2: y + h,
-        }
-    }
-
-    pub fn from_other<U: Add<Output = U> + Sub<Output = U> + Copy>(other: &Bbox<U>) -> Self
-    where
-        U: Into<T>,
-    {
-        Bbox {
-            x1: other.x1.into(),
-            y1: other.y1.into(),
-            x2: other.x2.into(),
-            y2: other.y2.into(),
-        }
-    }
-
-    // pub fn from_vec(vec: &Vec<T>) -> Self {
-    //     Bbox {
-    //         x1: vec[0],
-    //         y1: vec[1],
-    //         x2: vec[2],
-    //         y2: vec[3],
-    //     }
-    // }
-
-    pub fn from_bbox(bbox: impl BoxLike<Item = T>) -> Self {
-        Bbox {
-            x1: bbox.x1(),
-            y1: bbox.y1(),
-            x2: bbox.x2(),
-            y2: bbox.y2(),
-        }
-    }
-
-    pub fn to_arr(&self) -> [T; 4] {
-        [self.x1, self.y1, self.x2, self.y2]
+    fn height(&self) -> usize {
+        (self.iy2() - self.iy1()) as usize
     }
 }
 
-impl<T> BoxLike for Bbox<T>
+impl<T> IntBoxLike for T
 where
-    T: Add<Output = T> + Sub<Output = T> + Copy,
+    T: BoxLike,
 {
-    type Item = T;
-    fn x1(&self) -> T {
-        self.x1
+    fn ix1(&self) -> isize {
+        self.x1() as isize
     }
-    fn y1(&self) -> T {
-        self.y1
+
+    fn iy1(&self) -> isize {
+        self.y1() as isize
     }
-    fn x2(&self) -> T {
-        self.x2
+
+    fn ix2(&self) -> isize {
+        self.x2() as isize
     }
-    fn y2(&self) -> T {
-        self.y2
+
+    fn iy2(&self) -> isize {
+        self.y2() as isize
     }
 }
 
-macro_rules! impl_arrays {
+pub struct Bbox([f64; 4]);
+
+impl Bbox {
+    pub fn new<T: Into<f64>>(x1: T, y1: T, x2: T, y2: T) -> Self {
+        Bbox([x1.into(), y1.into(), x2.into(), y2.into()])
+    }
+
+    pub fn from_arr<T: Into<f64> + Copy>(arr: &[T; 4]) -> Self {
+        Bbox([arr[0].into(), arr[1].into(), arr[2].into(), arr[3].into()])
+    }
+
+    pub fn from_wh<T: Into<f64> + Copy>(x: T, y: T, w: T, h: T) -> Self {
+        Bbox([x.into(), y.into(), x.into() + w.into(), y.into() + h.into()])
+    }
+
+    pub fn from_bbox(bbox: impl BoxLike) -> Self {
+        Bbox::new(bbox.x1(), bbox.y1(), bbox.x2(), bbox.y2())
+    }
+
+    pub fn to_arr(&self) -> [f64; 4] {
+        self.0
+    }
+
+    pub fn as_arr(self) -> [f64; 4] {
+        self.0
+    }
+}
+
+impl BoxLike for Bbox {
+    fn x1(&self) -> f64 {
+        self.0[0]
+    }
+
+    fn y1(&self) -> f64 {
+        self.0[1]
+    }
+
+    fn x2(&self) -> f64 {
+        self.0[2]
+    }
+
+    fn y2(&self) -> f64 {
+        self.0[3]
+    }
+}
+
+macro_rules! impl_box_like_arrays {
     ($($ty: ty),*) => {
         $(
             impl BoxLike for [$ty;4] {
-                type Item = $ty;
-                fn x1(&self) -> $ty {
-                    self[0]
+                fn x1(&self) -> f64 {
+                    self[0] as f64
                 }
-                fn y1(&self) -> $ty {
-                    self[1]
+                fn y1(&self) -> f64 {
+                    self[1] as f64
                 }
-                fn x2(&self) -> $ty {
-                    self[2]
+                fn x2(&self) -> f64 {
+                    self[2] as f64
                 }
-                fn y2(&self) -> $ty {
-                    self[3]
+                fn y2(&self) -> f64 {
+                    self[3] as f64
                 }
             }
         )*
     }
 }
 
-impl_arrays!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64);
+impl_box_like_arrays!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64);
 
 #[cfg(test)]
 mod test {
     use super::*;
     #[test]
     fn it_works() {
-        let result = Bbox::<i16>::from_arr(&[1, 2, 3, 4]);
-        let bbox_f32: Bbox<f32> = Bbox::from_other(&result);
-        assert_eq!(bbox_f32.x1, 1.0);
+        let box_ = Bbox::new(1, 2, 3, 4);
+        assert_eq!(box_.x1(), 1.0);
         let a = [1.0, 2.0, 3.0, 4.0];
-        assert_eq!(a.x1(), 1.0)
+        assert_eq!(a.x1(), 1.0);
+        let box_2 = [1, 2, 3, 4];
+        assert_eq!(box_2.x1(), 1.0);
+        assert_eq!(box_2.ix1(), 1);
+    }
+
+    #[test]
+    fn test_iou() {
+        let bbox_1 = [0, 0, 10, 10];
+        let bbox_2 = [5, 5, 10, 15];
+        let iou = bbox_1.iou(&bbox_2);
+        assert_eq!(iou, 0.2);
     }
 }
