@@ -1,4 +1,6 @@
-pub trait BoxLike {
+use crate::WidthAHeight;
+
+pub trait BoxLike: WidthAHeight {
     fn x1(&self) -> f64;
     fn y1(&self) -> f64;
     fn x2(&self) -> f64;
@@ -15,25 +17,13 @@ pub trait BoxLike {
         let area2 = (other.x2() - other.x1()) * (other.y2() - other.y1());
         inter as f64 / (area1 + area2 - inter) as f64
     }
-    fn width(&self) -> f64 {
-        self.x2() - self.x1()
-    }
-    fn height(&self) -> f64 {
-        self.y2() - self.y1()
-    }
 }
 
-pub trait IntBoxLike {
+pub trait IntBoxLike: WidthAHeight {
     fn ix1(&self) -> isize;
     fn iy1(&self) -> isize;
     fn ix2(&self) -> isize;
     fn iy2(&self) -> isize;
-    fn iwidth(&self) -> usize {
-        (self.ix2() - self.ix1()) as usize
-    }
-    fn iheight(&self) -> usize {
-        (self.iy2() - self.iy1()) as usize
-    }
 }
 
 impl<T> IntBoxLike for T
@@ -80,8 +70,38 @@ impl Bbox {
         self.0
     }
 
-    pub fn as_arr(self) -> [f64; 4] {
+    pub fn into_arr(self) -> [f64; 4] {
         self.0
+    }
+}
+
+impl WidthAHeight for Bbox {
+    fn width(&self) -> f64 {
+        self.0[2] - self.0[0]
+    }
+
+    fn height(&self) -> f64 {
+        self.0[3] - self.0[1]
+    }
+}
+
+impl<T: Into<f64> + Copy> WidthAHeight for [T; 4]{
+    fn width(&self) -> f64 {
+        self[2].into() - self[0].into()
+    }
+
+    fn height(&self) -> f64 {
+        self[3].into() - self[1].into()
+    }
+}
+
+impl<T: Into<f64> + Copy> WidthAHeight for (T, T, T, T) {
+    fn width(&self) -> f64 {
+        self.2.into() - self.0.into()
+    }
+
+    fn height(&self) -> f64 {
+        self.3.into() - self.1.into()
     }
 }
 
@@ -136,28 +156,5 @@ impl<T: Into<f64> + Copy> BoxLike for (T, T, T, T) {
 
     fn y2(&self) -> f64 {
         self.3.into()
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    #[test]
-    fn it_works() {
-        let box_ = Bbox::new(1, 2, 3, 4);
-        assert_eq!(box_.x1(), 1.0);
-        let a = [1.0, 2.0, 3.0, 4.0];
-        assert_eq!(a.x1(), 1.0);
-        let box_2 = [1, 2, 3, 4];
-        assert_eq!(box_2.x1(), 1.0);
-        assert_eq!(box_2.ix1(), 1);
-    }
-
-    #[test]
-    fn test_iou() {
-        let bbox_1 = [0, 0, 10, 10];
-        let bbox_2 = [5, 5, 10, 15];
-        let iou = bbox_1.iou(&bbox_2);
-        assert_eq!(iou, 0.2);
     }
 }

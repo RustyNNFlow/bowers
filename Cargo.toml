@@ -10,7 +10,8 @@ repository = "https://github.com/RustyNNFlow/bowers"
 members = ["crates/*"]
 
 [dependencies]
-bower-internal = { path = "crates/bower-internal" }
+bower-core = { path = "crates/bower-core" }
 
 [features]
-image-rs = ["bower-internal/image-rs"]
+image-rs = ["bower-core/image-rs"]
+#opencv = ["bower-core/opencv"]
