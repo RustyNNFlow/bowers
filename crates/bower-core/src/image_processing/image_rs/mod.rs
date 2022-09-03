@@ -1,4 +1,3 @@
-
 use image::{ImageBuffer, Pixel, imageops};
 use crate::data::{ImageLike, IntBoxLike};
 use crate::image_processing::crop::Cropable;
